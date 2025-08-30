@@ -1,4 +1,4 @@
-# A GATK pipeline to call SNPS and indels and find the copy number variation of peanut genomes
+# A GATK pipeline to call SNPS and indels and find the copy number variation of peanut WGS reads
 For my undergraduate thesis, completed from August 2025 to May 2026 (currently ongoing) at the Komplex Systems Laboratory, Ahmedabad University under the supervision of Professor Krishna Bs Swamy, I optimised a GATK pipeline written by members of the laboratory, so that it could accurately align WGS *Arachis hypogaea* (peanut) reads to reference genomes, call variants such as SNPs and indels, and obtain the Copy Number Variation.
 
 Each step was run on Stepwell - the university's HPC cluster - as the input files were very large, indicating that the analysis would be computationally intensive. The HPC uses Slurm to schedule and run jobs.
