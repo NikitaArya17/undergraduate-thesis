@@ -1,2 +1,6 @@
-# undergraduate-thesis
-This repo features the Slurm scripts I wrote for each step of my WGS data analysis pipeline, involving variant calling of SNPs and indels, as well as finding the Copy Number Variation, of reads obtained from sequencing the genomes of two peanut cultivars.
+# A GATK pipeline to call SNPS and indels and find the copy number variation of peanut genomes
+For my undergraduate thesis, completed from August 2025 to May 2026 (currently ongoing) at the Komplex Systems Laboratory, Ahmedabad University under the supervision of Professor Krishna Bs Swamy, I optimised a GATK pipeline written by members of the laboratory, so that it could accurately align WGS *Arachis hypogaea* (peanut) reads to reference genomes, call variants such as SNPs and indels, and obtain the Copy Number Variation.
+
+Each step was run on Stepwell - the university's HPC cluster - as the input files were very large, indicating that the analysis would be computationally intensive. The HPC uses Slurm to schedule and run jobs.
+
+I modified the pipeline's parameters so that it could suitably analyse sequencing reads obtained from plants such as the peanut. Each step of the pipeline was submitted to the HPC as a separate Slurm script. These scripts have been included in the 'code' folder, while the log files generated from the analyses have been stored in the 'log' folder. The input and output files have not been stored here at the moment, as they are large files, with one being as large as 278 GB. 
