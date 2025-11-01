@@ -4,4 +4,5 @@ For my undergraduate thesis, completed from August 2025 to May 2026 (currently o
 WGS reads were aligned to the reference genomes using bwa-mem2. After filtering for duplicate reads and low-quality bases, GATK’s HaplotypeCaller, SelectVariants and VariantFiltration tools were used to identify SNPs and indels. Variant annotation was performed with SnpEff and SnpSift. The Copy Number Variation of the genome was determined with Control-FREEC. 
 Each step of the pipeline was run on Stepwell, the university's HPC cluster, which Slurm to schedule and run jobs.
 
+The machine learning pipeline has been built on the code used in [this study](https://www.nature.com/articles/s41467-018-05807-z).
 The NB Classifier and SVM will be built in R, which has also been used to preprocess the input data and convert it into a format that is suitable for training ML models. Python will be used to build the ANN.
