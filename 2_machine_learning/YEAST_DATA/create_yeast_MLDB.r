@@ -29,3 +29,4 @@ write.csv(df, "YEAST_DATA/MLDB_yeast.csv", row.names = FALSE)
 head(df)
 dim(df)
 class(df)
+
