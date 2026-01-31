@@ -62,4 +62,5 @@ all_phenos[categories].head()
 
 final_DB = all_phenos[valid_gene_cols + categories]
 final_DB.shape
+
 final_DB.to_csv("YEAST_DATA/MLDB_yeast.csv")
