@@ -8,3 +8,6 @@ The machine learning pipeline has been built on the code used in [this study](ht
 The NB Classifier and SVM will be built in R, which has also been used to preprocess the input data and convert it into a format that is suitable for training ML models. Python will be used to build the ANN.
 
 Datasets from [this paper](https://link.springer.com/article/10.1038/s44320-025-00136-y) were used to test the finished ML pipeline.
+
+### Potential Applications in Digital Healthcare ###
+Machine learning models can be trained to predict which genes are likely to mutate, or which phenotype is likely given a specific genotype. Such models could be useful in medical genetics or genetic counselling, to predict the probability that a patient may present with a specific genetic disorder. This could allow healthcare practitioners to develop personalised treatment strategies, tailored to each patient's unique genotype.
