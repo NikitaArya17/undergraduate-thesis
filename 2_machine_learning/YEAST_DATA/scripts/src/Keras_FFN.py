@@ -1,0 +1,146 @@
+import pandas as pd
+import numpy as np
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout,BatchNormalization
+from keras.optimizers import RMSprop
+from keras.regularizers import l2,l1
+from keras.optimizers import Adam,RMSprop,Adagrad
+
+from sklearn.model_selection import KFold
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+from keras.callbacks import EarlyStopping
+from sklearn.metrics import average_precision_score
+
+import collections
+import sys
+import csv
+import random
+
+args = sys.argv
+pheno_index = int(args[1])
+line_num = int(args[2])
+base_dir = "/home/nikita.arya/ensemble_pipeline/YEAST_DATA"
+
+# read in data
+df = pd.read_csv(f"{base_dir}/input_data/MLDB_yeast.csv", index_col = 0)
+first_pheno_index = df.shape[1] - 8
+
+target_col_name = df.columns[first_pheno_index + pheno_index]
+df = df.dropna(subset=[target_col_name])
+
+X, Y = np.split(df, [first_pheno_index], axis=1)
+X = X.values
+#X = X-0.5
+Y = Y.values[:, pheno_index]
+
+
+def get_setting(file_path,line_num):
+    digits = tuple([str(i) for i in range(9)])
+    print("line_num:", line_num)
+    with open(file_path) as fp:
+        for i, line in enumerate(fp):
+            if i == line_num:
+                setting = [float(x)  if x.startswith(digits ) else x for x in line.strip().split(",")]
+                break
+    print("setting: ",setting)
+    return setting
+
+Model_setting = collections.namedtuple('Model_setting','num_layers num_node alpha drop_rate act_method lr regularization patience opt_method')
+setting_ = get_setting(f"{base_dir}/output_data/FFN_setting",line_num)
+setting = Model_setting(*setting_)
+setting = setting._asdict()
+
+
+def getModel(setting,num_input=100):
+    regularizer = l1(setting['alpha']) if setting['regularization']=='l1' else l2(setting['alpha'])
+    optimizers = {"adam":  Adam(learning_rate=setting['lr']), "RMSProp":RMSprop(learning_rate=setting['lr']), "Adagrad": Adagrad(learning_rate=0.01) }
+
+    optimizer = optimizers[setting['opt_method']]
+    num_nodes = [int(i)  for i in setting['num_node'].split("_") if i!=""]
+
+    model = Sequential()
+    for i in range(int(setting['num_layers'])):
+        if i==0:
+            model.add(Dense( num_nodes[i], input_shape=(num_input,), activation=setting['act_method'], kernel_regularizer = regularizer))
+            model.add(Dropout(setting['drop_rate']))
+        else:
+            model.add(Dense( num_nodes[i], activation=setting['act_method']))
+            model.add(Dropout(setting['drop_rate']))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=setting['lr']), metrics=['accuracy'])
+    return model
+
+
+
+callbacks = [EarlyStopping(monitor='accuracy',min_delta=0,patience = int(setting['patience']) )]
+
+
+def cross_validation(X,Y,setting,num_input):
+    keras.backend.clear_session()
+    model = getModel(setting,num_input)
+    preds = []
+    actuals = []
+    for train, test in KFold(n_splits = 5, shuffle = True, random_state = 42).split(X, Y):
+        model.fit(X[train,:],Y[train],epochs=50,verbose=0, callbacks =callbacks)
+        probas_ = model.predict(X[test,:])
+        preds.extend(probas_.flatten())
+        actuals.extend(Y[test])
+        # Compute ROC curve and area under the curve
+    fpr, tpr, thresholds = roc_curve(actuals, preds)
+    average_precision = average_precision_score(actuals, preds)
+    roc_auc = auc(fpr, tpr)
+    if roc_auc < 0.5:
+        roc_auc = 1 - roc_auc
+    print("auc: ", roc_auc)
+    return (roc_auc,average_precision)
+
+def backward_selection(X,Y,setting):
+    all_indices = [i for i in range(X.shape[1])]
+    selector = SelectKBest(score_func=f_classif, k=100)
+    selector.fit(X, Y)
+
+    survive_index = list(selector.get_support(indices=True))
+    print(f"Screening complete. 8,000 genes reduced to {len(survive_index)} candidates.")
+    print("backward start survive_index", survive_index)
+    best_ROCs = []
+    best_PRs = []
+
+    exclude_index = []
+    for repeat_time  in range(len(survive_index)-1):
+        print("excluded: ", exclude_index)
+        print("best_perfs: ", best_PRs)
+
+        best_perf = 0
+        exclude_index_current = 0
+        best_ROC = 0
+        best_PR = 0
+        for index in survive_index:
+            survive_index_copy = [i for i in survive_index if i!=index]
+            perf = cross_validation(X[:,survive_index_copy],Y,setting,num_input = len(survive_index)-1)
+            print("perf: inner loop", perf)
+            if perf[0]+perf[1] > best_perf:
+               best_perf = perf[0] + perf[1]
+               best_ROC = perf[0]
+               best_PR = perf[1]
+               exclude_index_current = index
+        if repeat_time==0 or  best_perf > best_ROCs[-1] + best_PRs[-1]:
+            best_ROCs.append(best_ROC)
+            best_PRs.append(best_PR)
+            exclude_index.append(exclude_index_current)
+        else:
+            break
+    return (exclude_index,best_ROCs,best_PRs)
+
+res = backward_selection(X,Y,setting)
+print("res",res)
+
+
+res_path = f"{base_dir}/output_data/feature_selection/ANN/"+"pheno_class_"+str(pheno_index)+"_setting_"+str(line_num)
+with open(res_path,"w") as f:
+    wr = csv.writer(f)
+    wr.writerows(res)
+
+print("end sucessfully")
