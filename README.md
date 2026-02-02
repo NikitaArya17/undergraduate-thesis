@@ -15,9 +15,16 @@ The NB Classifier and SVM will be built in R, which has also been used to prepro
 
 Datasets from [this paper](https://link.springer.com/article/10.1038/s44320-025-00136-y) were used to test the finished ML pipeline.
 
-### Potential Applications in Digital Healthcare ###
+## Potential Applications in Digital Healthcare ##
+
+### Detecting Genetic Disorders ###
 Machine learning models can be trained to predict which genes are likely to mutate, or which phenotype may result from a given genotype.
 
 Such models could be useful in medical genetics or genetic counselling, to predict the probability that a patient may have a specific genetic disorder.
 
 This could allow healthcare practitioners to develop personalised treatment strategies, tailored to each patient's unique genotype.
+
+### Monitoring Emerging Pathogenic Infections ###
+A machine learning model that can predict likely genetic mutations in specific viruses can serve as a vital tool during pandemics.
+
+This could help researchers and policymakers to anticipate the emergence of newer, more virulent strains and plan ahead to design effective treatments, and mobilise medical resources.
