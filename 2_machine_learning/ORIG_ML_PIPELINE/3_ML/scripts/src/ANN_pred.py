@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import gc
 import keras
-from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 from keras.models import Sequential,Model
@@ -20,7 +19,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 start_idx = 0
 end_idx = 1991
 
-
 if len(sys.argv) > 2:
     start_idx = int(sys.argv[1])
     end_idx = int(sys.argv[2])
@@ -37,8 +35,6 @@ first_gene_index = df.columns.get_loc("ybcS")
 X, Y = np.split(df, [first_gene_index], axis=1)
 X = X.values
 X = X-0.5
-
-
 
 Model_setting = collections.namedtuple('Model_setting','num_layers num_node alpha drop_rate act_method lr regularization patience')
 
@@ -81,20 +77,8 @@ for i in range(start_idx, end_idx):
     X_train, X_val = X[train_idx], X[val_idx]
     y_train, y_val = Y_target[train_idx], Y_target[val_idx]
 
-    # To address class imbalance
-    if np.sum(y_train == 1) > 6 and np.sum(y_train == 0) > 6:
-        sm = SMOTE(random_state=42)
-        try:
-            X_train_res, y_train_res = sm.fit_resample(X_train, y_train)
-        except ValueError:
-            # Fallback if SMOTE fails (for an extremely rare class)
-            X_train_res, y_train_res = X_train, y_train
-    else:
-        # Not enough samples to oversample safely
-        X_train_res, y_train_res = X_train, y_train
-
     current_model = create_model(num_input = X.shape[1])
-    current_model.fit(X_train_res, y_train_res,
+    current_model.fit(X_train, y_train,
                       epochs=100,
                       validation_data=(X_val, y_val),
                       verbose=0)
