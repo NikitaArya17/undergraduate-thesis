@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix
+from sklearn.metrics import roc_auc_score, accuracy_score, average_precision_score, confusion_matrix
 import gc
 
 base_dir = "/home/nikita.arya/ensemble_pipeline/"
@@ -54,7 +54,7 @@ metrics_list = []
 val_preds_df = pd.DataFrame(np.nan, index=df.index, columns=gene_names)
 
 indices = np.arange(len(df))
-_, val_idx = train_test_split(indices, test_size=0.2, random_state=42)
+_, val_idx = train_test_split(indices, test_size=0.2, random_state=2021)
 X_val = X_all[val_idx]
 
 print(f"Starting validation for {len(gene_names)} genes...")
@@ -88,6 +88,11 @@ for i, gene_name in enumerate(gene_names):
         except ValueError:
             auc = 0.5
 
+        try:
+            auprc = average_precision_score(y_true, probs)
+        except ValueError:
+            auprc = 0.5
+
         y_pred_class = (probs > 0.5).astype(int)
         acc = accuracy_score(y_true, y_pred_class)
 
@@ -99,6 +104,7 @@ for i, gene_name in enumerate(gene_names):
             'Gene_ID': i,
             'Gene_Name': gene_name,
             'AUC': auc,
+            'AUPRC': auprc,
             'Accuracy': acc,
             'Sensitivity': sensitivity,
             'Specificity': specificity

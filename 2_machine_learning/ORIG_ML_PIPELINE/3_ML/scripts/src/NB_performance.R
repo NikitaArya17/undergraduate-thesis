@@ -1,6 +1,7 @@
 library(e1071)
 library(caret)
 library(pROC)
+library(PRROC)
 
 base_dir <- "/home/nikita.arya/ensemble_pipeline"
 input_file <- file.path(base_dir, "output_data/MLDB_repro.csv")
@@ -31,7 +32,7 @@ for (i in seq_along(gene_names)) {
   data <- df[, c(predictor_cols, 79 + i)]
   colnames(data)[80] <- "gene"
   
-  set.seed(42)
+  set.seed(2021)
   trainIndex <- createDataPartition(data$gene, p = 0.8, list = FALSE, times = 1)
   
   val_indices <- setdiff(1:nrow(df), trainIndex)
@@ -61,10 +62,13 @@ for (i in seq_along(gene_names)) {
     actual_labels <- dataVal$gene
     
     roc_val <- NA
+    prc_val <- NA
     actual_num <- as.numeric(as.character(actual_labels))
     if (var(actual_num) > 0) {
        roc_obj <- roc(actual_num, probs, quiet = TRUE)
        roc_val <- as.numeric(auc(roc_obj))
+       prc_obj <- pr.curve(scores.class0 = probs, weights.class0 = actual_num, curve = TRUE)
+       prc_val <- as.numeric(prc_obj$auc.integral)
     }
     
     pred_class <- factor(ifelse(probs > 0.5, "1", "0"), levels = c("0", "1"))
@@ -74,6 +78,7 @@ for (i in seq_along(gene_names)) {
       Gene_ID = gene_id,
       Gene_Name = target_name,
       AUC = roc_val,
+      AUPRC = prc_val,
       Accuracy = cm$overall['Accuracy'],
       Sensitivity = cm$byClass['Sensitivity'],
       Specificity = cm$byClass['Specificity']

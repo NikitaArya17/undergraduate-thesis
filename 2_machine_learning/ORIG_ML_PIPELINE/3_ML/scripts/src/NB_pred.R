@@ -17,7 +17,7 @@ for (gene_id in 1:1990) {
   data = df[, c(1:79, 79 + gene_id)]
   colnames(data)[80] = "gene"
   
-  set.seed(42)
+  set.seed(2021)
   trainIndex <- createDataPartition(data$gene, p = 0.8, list = FALSE, times = 1)
   dataTrain <- data[ trainIndex,]
   

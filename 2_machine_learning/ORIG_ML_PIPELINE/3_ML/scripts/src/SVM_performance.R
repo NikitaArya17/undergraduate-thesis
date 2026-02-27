@@ -1,6 +1,7 @@
 library(e1071)
 library(caret)
 library(pROC)
+library(PRROC)
 
 base_dir <- "/home/nikita.arya/ensemble_pipeline"
 input_file <- file.path(base_dir, "output_data/MLDB_repro.csv")
@@ -26,13 +27,13 @@ cat(paste("Starting SVM Validation for", length(gene_names), "genes...\n"))
 
 for (i in seq_along(gene_names)) {
   
-  gene_id <- i # Assuming sequential 1..1990
+  gene_id <- i
   target_name <- gene_names[i]
   
   data <- df[, c(predictor_cols, 79 + i)]
   colnames(data)[80] <- "gene"
   
-  set.seed(42)
+  set.seed(2021)
   trainIndex <- createDataPartition(data$gene, p = 0.8, list = FALSE, times = 1)
   
   val_indices <- setdiff(1:nrow(df), trainIndex)
@@ -46,7 +47,7 @@ for (i in seq_along(gene_names)) {
     next
   }
   
-  load(model_file) # Loads 'model'
+  load(model_file)
   
   tryCatch({
     pred_obj <- predict(model, dataVal[, predictor_cols], probability = TRUE)
@@ -58,9 +59,12 @@ for (i in seq_along(gene_names)) {
     actual_labels <- dataVal$gene
     
     roc_val <- NA
+    prc_val <- NA
     if (length(unique(actual_labels)) > 1) {
        roc_obj <- roc(as.numeric(actual_labels) - 1, probs, quiet = TRUE)
        roc_val <- as.numeric(auc(roc_obj))
+       prc_obj <- pr.curve(scores.class0 = probs, weights.class0 = as.numeric(actual_labels) - 1, curve = TRUE)
+       prc_val <- as.numeric(prc_obj$auc.integral)
     }
     
     pred_class <- factor(ifelse(probs > 0.5, "1", "0"), levels = c("0", "1"))
@@ -70,6 +74,7 @@ for (i in seq_along(gene_names)) {
       Gene_ID = gene_id,
       Gene_Name = target_name,
       AUC = roc_val,
+      AUPRC = prc_val,
       Accuracy = cm$overall['Accuracy'],
       Sensitivity = cm$byClass['Sensitivity'],
       Specificity = cm$byClass['Specificity']

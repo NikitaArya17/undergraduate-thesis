@@ -63,7 +63,7 @@ output_dir = "/home/nikita.arya/ensemble_pipeline/output_models/ANN"
 
 num_samples = X.shape[0]
 indices = np.arange(num_samples)
-train_idx, val_idx = train_test_split(indices, test_size=0.2, random_state=42)
+train_idx, val_idx = train_test_split(indices, test_size=0.2, random_state=2021)
 
 for i in range(start_idx, end_idx):
     model_path = os.path.join(output_dir, f"ANN{i}.weights.h5")
